@@ -6,66 +6,77 @@ from io import BytesIO
 
 # --- 0. 系統配置 ---
 st.set_page_config(
-    page_title="阿美語小教室", 
+    page_title="阿美語小教室 - Unit 2", 
     page_icon="🐸", 
     layout="centered", 
     initial_sidebar_state="collapsed"
 )
 
-# --- CSS 極致美化 (Salongan 主題) ---
+# --- CSS 極致美化 (森林池塘主題) ---
 st.markdown("""
     <style>
-    .stApp { background-color: #FFFBF5; }
+    /* 全局背景：清爽薄荷綠 */
+    .stApp { background-color: #F1F8E9; }
+    
     .block-container { padding-top: 2rem !important; padding-bottom: 5rem !important; }
+    
+    /* 標題漸層：森林綠 -> 湖水藍 */
     h1 {
         font-family: 'Helvetica Neue', sans-serif;
-        background: -webkit-linear-gradient(45deg, #FF6B6B, #FF8E53);
+        background: -webkit-linear-gradient(45deg, #2E7D32, #1DE9B6);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 900 !important;
         text-align: center;
         padding-bottom: 10px;
     }
+    
+    /* 按鈕：翠綠色漸層，像荷葉 */
     .stButton>button {
         width: 100%;
         border-radius: 50px;
         font-size: 18px;
         font-weight: 700;
-        background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%);
-        color: #4A4A4A;
+        background: linear-gradient(135deg, #66BB6A 0%, #43A047 100%);
+        color: #FFFFFF; /* 白字對比更清晰 */
         border: none;
         padding: 15px 0px;
-        box-shadow: 0px 5px 15px rgba(253, 185, 49, 0.4);
+        box-shadow: 0px 5px 15px rgba(76, 175, 80, 0.4);
         transition: all 0.3s ease;
     }
     .stButton>button:hover {
         transform: translateY(-3px) scale(1.02);
-        box-shadow: 0px 8px 20px rgba(253, 185, 49, 0.6);
+        box-shadow: 0px 8px 20px rgba(76, 175, 80, 0.6);
+        background: linear-gradient(135deg, #81C784 0%, #2E7D32 100%);
     }
+    
+    /* 卡片設計 */
     .card {
         background-color: #ffffff;
         padding: 20px;
         border-radius: 25px;
         text-align: center;
         margin-bottom: 20px;
-        border: 1px solid #F0F0F0;
+        border: 2px solid #E8F5E9; /* 淺綠邊框 */
         box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-        transition: transform 0.3s ease;
+        transition: transform 0.3s ease, border-color 0.3s ease;
     }
     .card:hover {
         transform: translateY(-5px);
-        border-color: #FF6B6B;
+        border-color: #4CAF50; /* 懸浮變深綠 */
+        box-shadow: 0 15px 30px rgba(76, 175, 80, 0.2);
     }
+    
     .big-font {
         font-size: 32px !important;
         font-weight: 800;
-        color: #FF6B6B;
+        color: #2E7D32; /* 深綠色字體 */
         margin: 10px 0;
         letter-spacing: 1px;
     }
     .med-font {
         font-size: 18px !important;
-        color: #888;
+        color: #666;
         font-weight: 500;
         margin-bottom: 15px;
     }
@@ -74,19 +85,24 @@ st.markdown("""
         margin-bottom: 5px;
         filter: drop-shadow(0 3px 5px rgba(0,0,0,0.1));
     }
+    
+    /* 講師資訊框：半透明綠 */
     .instructor-box {
         text-align: center;
-        color: #999;
+        color: #558B2F;
         font-size: 14px;
-        background: rgba(255,255,255,0.6);
+        background: rgba(220, 237, 200, 0.6);
         padding: 8px 20px;
         border-radius: 20px;
         display: inline-block;
         margin: 0 auto 25px auto;
-        border: 1px solid #eee;
+        border: 1px solid #C5E1A5;
     }
+    
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+    
+    /* Tab 標籤頁設計 */
     .stTabs [data-baseweb="tab-list"] { gap: 10px; }
     .stTabs [data-baseweb="tab"] {
         height: 50px;
@@ -96,16 +112,17 @@ st.markdown("""
         box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         padding: 10px 20px;
         font-weight: 600;
+        color: #555;
     }
     .stTabs [aria-selected="true"] {
-        background-color: #FF6B6B !important;
+        background-color: #4CAF50 !important; /* 選中變綠色 */
         color: white !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
 # --- 1. 數據結構 ---
-# 檔名設定：去除特殊符號 ' 以避免錯誤
+# 檔名設定：去除特殊符號 '
 VOCABULARY = {
     "Tata'ang": {"zh": "很大", "emoji": "🐘", "action": "張開雙臂畫大圓", "file": "Tataang"},
     "Mata":     {"zh": "眼睛", "emoji": "👀", "action": "指指眼睛", "file": "Mata"},
@@ -127,7 +144,6 @@ def play_audio(text, filename_base=None):
         if os.path.exists(path_mp3):
             st.audio(path_mp3, format='audio/mp3')
             return
-        # 找不到檔案時顯示提示
         st.error(f"⚠️ 找不到音檔：audio/{filename_base}.m4a")
 
     try:
@@ -148,11 +164,11 @@ if 'current_q' not in st.session_state:
 # --- 3. 介面邏輯 ---
 
 def show_learning_mode():
-    # 標題已更新：移除 Unit 2
+    # 標題區塊：使用深綠色調
     st.markdown("""
         <div style='text-align: center; margin-bottom: 25px;'>
-            <h2 style='color: #2A9D8F; font-size: 28px; margin: 0;'>Tata'ang a Mata</h2>
-            <div style='color: #A0A0A0; font-size: 18px; font-weight: 400; letter-spacing: 2px; margin-top: 5px;'>
+            <h2 style='color: #2E7D32; font-size: 28px; margin: 0;'>Tata'ang a Mata</h2>
+            <div style='color: #81C784; font-size: 18px; font-weight: 400; letter-spacing: 2px; margin-top: 5px;'>
                 — 很大的眼睛 —
             </div>
         </div>
@@ -165,12 +181,13 @@ def show_learning_mode():
     
     for idx, (amis, data) in enumerate(words):
         with (col1 if idx % 2 == 0 else col2):
+            # 動作提示標籤：改為淡綠色背景
             st.markdown(f"""
             <div class="card">
                 <div class="emoji-icon">{data['emoji']}</div>
                 <div class="big-font">{amis}</div>
                 <div class="med-font">{data['zh']}</div>
-                <div style="color: #2A9D8F; font-size: 13px; font-weight:bold; background: #E0F2F1; padding: 4px 10px; border-radius: 10px; display:inline-block;">
+                <div style="color: #2E7D32; font-size: 13px; font-weight:bold; background: #C8E6C9; padding: 4px 10px; border-radius: 10px; display:inline-block;">
                     {data['action']}
                 </div>
             </div>
@@ -182,19 +199,21 @@ def show_learning_mode():
     
     s1 = SENTENCES[0]
     
+    # 句型卡片：改為黃綠色漸層，模擬陽光灑在草地
     st.markdown(f"""
-    <div class="card" style="background: linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%); border: 2px solid #FFF59D;">
-        <div style="font-size: 22px; font-weight:900; color:#FBC02D; margin-bottom: 8px; text-shadow: 1px 1px 0px #fff;">
+    <div class="card" style="background: linear-gradient(135deg, #F0F4C3 0%, #DCEDC8 100%); border: 2px solid #AED581;">
+        <div style="font-size: 22px; font-weight:900; color:#558B2F; margin-bottom: 8px; text-shadow: 1px 1px 0px #fff;">
             {s1['amis']}
         </div>
-        <div style="color:#7F8C8D; font-size: 18px;">{s1['zh']}</div>
+        <div style="color:#689F38; font-size: 18px;">{s1['zh']}</div>
     </div>
     """, unsafe_allow_html=True)
     play_audio(s1['amis'], filename_base=s1.get('file')) 
 
 def show_quiz_mode():
-    st.markdown("<h3 style='text-align: center; color: #FF6B6B; margin-bottom: 20px;'>🏆 小勇士挑戰</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #43A047; margin-bottom: 20px;'>🏆 小勇士挑戰</h3>", unsafe_allow_html=True)
     
+    # 進度條顏色會自動跟隨 Streamlit 主題，但我們可以靠 CSS 影響整體氛圍
     st.progress(st.session_state.current_q / 3)
     st.write("") 
 
@@ -221,8 +240,9 @@ def show_quiz_mode():
     elif st.session_state.current_q == 1:
         st.markdown("**第 2 關：句子接龍**")
         st.markdown("請完成句子：")
+        # 填空題樣式：左邊框改為綠色
         st.markdown("""
-        <div style="background:#fff; padding:15px; border-radius:10px; border-left: 5px solid #FF6B6B; margin: 10px 0;">
+        <div style="background:#fff; padding:15px; border-radius:10px; border-left: 5px solid #4CAF50; margin: 10px 0;">
             <span style="font-size:20px;">Tata'ang ko <b>_______</b> no takola'.</span>
             <br><span style="color:#999; font-size:14px;">(青蛙的眼睛很大)</span>
         </div>
@@ -260,11 +280,12 @@ def show_quiz_mode():
         if st.button("Miso! (你的)"): st.error("不對喔！")
 
     else:
+        # 結算卡片：金黃色配綠色
         st.markdown(f"""
-        <div class="card" style="background: linear-gradient(180deg, #FFFFFF 0%, #FFF3E0 100%); border: 2px solid #FFD700;">
+        <div class="card" style="background: linear-gradient(180deg, #FFFFFF 0%, #F1F8E9 100%); border: 2px solid #FFD700;">
             <h1 style="margin-bottom:0;">🎉 挑戰完成！</h1>
-            <h2 style="color: #E67E22; margin-top:0;">得分：{st.session_state.score}</h2>
-            <hr style="border-top: 1px dashed #FFD700;">
+            <h2 style="color: #43A047; margin-top:0;">得分：{st.session_state.score}</h2>
+            <hr style="border-top: 1px dashed #AED581;">
             <p style="font-size: 20px; color: #555;">Tata'ang ko mata no takola'! 🐸</p>
         </div>
         """, unsafe_allow_html=True)
@@ -277,7 +298,6 @@ def show_quiz_mode():
 # --- 4. 主程式入口 ---
 st.title("阿美語小教室 🌞")
 
-# 講師資訊已更新
 st.markdown("""
     <div style="text-align: center;">
         <span class="instructor-box">
